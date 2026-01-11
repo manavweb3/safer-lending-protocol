@@ -1,16 +1,10 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
-
-import "./MockERC20.sol";
-import "./PriceOracle.sol";
-
 contract SaferLending {
     /*//////////////////////////////////////////////////////////////
                                 CONSTANTS
     //////////////////////////////////////////////////////////////*/
 
-    uint256 public constant LTV = 60; // 60%
-    uint256 public constant LIQUIDATION_THRESHOLD = 70; // 70%
+    uint256 public constant LTV = 60;
+    uint256 public constant LIQUIDATION_THRESHOLD = 70;
     uint256 public constant LIQUIDATION_DELAY = 10 minutes;
     uint256 public constant ORACLE_STALE_TIME = 5 minutes;
 
@@ -29,4 +23,18 @@ contract SaferLending {
     }
 
     mapping(address => Position) public positions;
+
+    /*//////////////////////////////////////////////////////////////
+                            CONSTRUCTOR
+    //////////////////////////////////////////////////////////////*/
+
+    constructor(
+        address _collateralToken,
+        address _debtToken,
+        address _priceOracle
+    ) {
+        collateralToken = MockERC20(_collateralToken);
+        debtToken = MockERC20(_debtToken);
+        priceOracle = PriceOracle(_priceOracle);
+    }
 }
