@@ -54,6 +54,33 @@ contract SaferLending {
         // Update position
         positions[msg.sender].collateral += amount;
     }
+/*//////////////////////////////////////////////////////////////
+                        HEALTH FACTOR
+//////////////////////////////////////////////////////////////*/
+
+function getHealthFactor(address user) public view returns (uint256) {
+    Position memory p = positions[user];
+
+    // No debt → infinitely healthy
+    if (p.debt == 0) {
+        return type(uint256).max;
+    }
+
+    (uint256 price, uint256 updatedAt) = priceOracle.getPrice();
+
+    require(
+        block.timestamp - updatedAt <= ORACLE_STALE_TIME,
+        "ORACLE_STALE"
+    );
+    require(price > 0, "INVALID_PRICE");
+
+    uint256 collateralValue = (p.collateral * price) / 1e18;
+
+    uint256 adjustedCollateral =
+        (collateralValue * LIQUIDATION_THRESHOLD) / 100;
+
+    return (adjustedCollateral * 1e18) / p.debt;
+}
 
 
 
