@@ -37,4 +37,24 @@ contract SaferLending {
         debtToken = MockERC20(_debtToken);
         priceOracle = PriceOracle(_priceOracle);
     }
+    /*//////////////////////////////////////////////////////////////
+                                DEPOSIT
+    //////////////////////////////////////////////////////////////*/
+    function deposit(uint256 amount) external {
+        require(amount > 0, "amount = 0");
+
+        // Pull collateral into protocol custody
+        bool success = collateralToken.transferFrom(
+            msg.sender,
+            address(this),
+            amount
+        );
+        require(success, "transfer failed");
+
+        // Update position
+        positions[msg.sender].collateral += amount;
+    }
+
+
+
 }
