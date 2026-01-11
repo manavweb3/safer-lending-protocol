@@ -82,6 +82,47 @@ function getHealthFactor(address user) public view returns (uint256) {
     return (adjustedCollateral * 1e18) / p.debt;
 }
 
+/*//////////////////////////////////////////////////////////////
+                            BORROW
+//////////////////////////////////////////////////////////////*/
+
+function borrow(uint256 amount) external {
+    require(amount > 0, "amount = 0");
+
+    Position storage p = positions[msg.sender];
+    require(p.collateral > 0, "no collateral");
+
+    // Simulate new debt
+    uint256 newDebt = p.debt + amount;
+
+    // Fetch oracle price
+    (uint256 price, uint256 updatedAt) = priceOracle.getPrice();
+    require(
+        block.timestamp - updatedAt <= ORACLE_STALE_TIME,
+        "ORACLE_STALE"
+    );
+    require(price > 0, "INVALID_PRICE");
+
+    // Compute collateral value
+    uint256 collateralValue = (p.collateral * price) / 1e18;
+
+    // Apply liquidation threshold
+    uint256 adjustedCollateral =
+        (collateralValue * LIQUIDATION_THRESHOLD) / 100;
+
+    // Health factor after borrow
+    uint256 healthFactorAfter =
+        (adjustedCollateral * 1e18) / newDebt;
+
+    require(healthFactorAfter >= 1e18, "INSUFFICIENT_COLLATERAL");
+
+    // Update state
+    p.debt = newDebt;
+
+    // Transfer borrowed tokens
+    bool success = debtToken.transfer(msg.sender, amount);
+    require(success, "borrow transfer failed");
+}
 
 
 }
